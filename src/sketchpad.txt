@@ -1,0 +1,24 @@
+
+  // table_node.rotate([1, 0, 0]);
+  //--------------------------------------------------------------------------------------------------------//
+  // Set up animation
+  //--------------------------------------------------------------------------------------------------------//
+  // var ang = 0;
+
+  // nodes.ball_2.animation_callback = function(delta_time) {
+  //   ang += delta_time / 1000;
+  //   this.transform[13] = Math.cos(ang) * 3;
+  // };
+
+    //handle input
+    //theta += 0.01;
+    //nodes.ball_2.animation_callback = function(delta_time) {
+      // nodes.ball_2.translate([0.01, 0, 0]);
+      //nodes.ball_2.rotate([theta, 0, 0]);
+      //nodes.ball_2.translate([0, 0, 0]);
+    //};
+    //nodes.ball_2.scale([(theta%2)+1, 1, 1]);
+    //mat4.make_translation(nodes.ball_2.transform, [0, theta, 0]);
+    //room_node.scale([5, 5, 5]);
+
+    //observer[1] += 1;
