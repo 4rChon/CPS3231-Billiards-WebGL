@@ -57,7 +57,8 @@ Geometry.prototype.make_sphere = function(centre, radius, h, v, color) {
   vertex_list[vertex_list.length] = 0                   // u
   vertex_list[vertex_list.length] = 1                   // v
   
-  for (var i = 0; i < v+1; i++) {
+  var i;
+  for (i = 0; i < v+1; i++) {
     for (var j = 0; j < h-1; j++) {
       index_list[index_list.length] = i * h + j;
       index_list[index_list.length] = (i + 1) * h + (j + 1) % h;
@@ -77,6 +78,13 @@ Geometry.prototype.make_sphere = function(centre, radius, h, v, color) {
       index_list[index_list.length] = (i + 1) * h;
     }
   }
+
+  index_list[index_list.length] = i * h - 1;
+  index_list[index_list.length] = (i + 1) * h;
+  index_list[index_list.length] = i * h;
+  index_list[index_list.length] = i * h - 1;
+  index_list[index_list.length] = (i + 1) * h - 1;
+  index_list[index_list.length] = (i + 1) * h;
   
   return {vertex : vertex_list, index : index_list};
 };

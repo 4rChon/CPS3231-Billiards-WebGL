@@ -54,5 +54,3 @@ GameSystem.prototype.decrease_sensitivity = function() {
 GameSystem.prototype.shoot = function() {
 
 }
-
-
