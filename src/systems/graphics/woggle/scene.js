@@ -10,12 +10,7 @@ function Node() {
 
   // Create transform for node (= I)
   this.transform = mat4.create();
-
-  // Create animation transforms
-  this.scaling_transform = mat4.create();
-  this.rotation_transform = mat4.create();
-  this.translation_transform = mat4.create();
-  this.animation_transform = mat4.create();
+  this.position = vec3.create();
   
   mat4.make_identity(this.transform);
 
@@ -32,12 +27,9 @@ Node.NODE_TYPE = {
 Node.prototype.draw = function(scene, parent_transform) {
   var composite_transform = mat4.create();
   mat4.make_identity(composite_transform);
+  mat4.apply(composite_transform, [this.transform, parent_transform]);  
 
-  var parent_composite_transform = mat4.create();
-  mat4.make_identity(parent_composite_transform);
-
-  mat4.multiply(parent_composite_transform, this.transform, parent_transform);
-  mat4.multiply(composite_transform, parent_composite_transform, this.animation_transform);
+  vec3.to(this.position, [composite_transform[12], composite_transform[13], composite_transform[14]]);
 
   var _type = this.type;
   var _node_object = this.node_object;
@@ -56,10 +48,6 @@ Node.prototype.draw = function(scene, parent_transform) {
 }
 
 Node.prototype.animate = function(delta_time) {
-  mat4.make_identity(this.translation_transform);
-  mat4.make_identity(this.rotation_transform);
-  mat4.make_identity(this.scaling_transform);
-
   if (this.animation_callback) {
     this.animation_callback(delta_time);
   }
@@ -67,40 +55,39 @@ Node.prototype.animate = function(delta_time) {
   this.children.forEach(function(child_node) {
     child_node.animate(delta_time);
   });
-
-  var composite_animation = mat4.create();
-  mat4.multiply(composite_animation, this.rotation_transform, this.translation_transform)
-  mat4.multiply(this.animation_transform, this.scaling_transform, composite_animation)
 }
 
 Node.prototype.translate = function(translation) {
-  mat4.make_translation(this.translation_transform, translation);
+  var translation_matrix = mat4.create();
+  mat4.make_translation(translation_matrix, translation);
 
-  mat4.multiply(this.animation_transform, this.transform, this.translation_transform);
+  mat4.apply(this.transform, [translation_matrix]);
 }
 
 Node.prototype.rotate = function(rotation) {
-  var rotation_matrix = mat4.create();
   var rotation_x = mat4.create();
   var rotation_y = mat4.create();
   var rotation_z = mat4.create();
-  var rotation_xy = mat4.create();
 
   mat4.make_rotation_x(rotation_x, rotation[0]);
   mat4.make_rotation_y(rotation_y, rotation[1]);
   mat4.make_rotation_z(rotation_z, rotation[2]);
 
-  mat4.multiply(rotation_xy, rotation_y, rotation_x);
-  mat4.multiply(this.rotation_transform, rotation_z, rotation_xy);
-  mat4.multiply(this.animation_transform, this.transform, this.rotation_transform);
+  this.transform[12] = 0;
+  this.transform[13] = 0;
+  this.transform[14] = 0;
+
+  mat4.apply(this.transform, [rotation_z, rotation_y, rotation_x]);
+
+  console.log(mat4.to_string(this.transform));
+  this.translate(this.position);
 }
 
 Node.prototype.scale = function(scale) {
   mat4.make_scaling(this.scaling_transform, scale);
 
-  mat4.multiply(this.animation_transform, this.transform, this.scaling_transform);
+  mat4.apply(this.transform, [this.scaling_transform]);
 }
-
 //--------------------------------------------------------------------------------------------------------//
 //  Scene Graph
 //--------------------------------------------------------------------------------------------------------//

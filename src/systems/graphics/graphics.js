@@ -29,12 +29,11 @@ GraphicsSystem.prototype.init_gl_context = function(canvas) {
   return this.gl;
 }
 
-GraphicsSystem.prototype.init_camera = function(position, target, near, far, fov) {
+GraphicsSystem.prototype.init_camera = function(position, target, up, near, far, fov, aspect) {
   return factory.create(Camera, {
-    position: position,
-    target: target,
+    position: position, target: target, up: up,
     near: near, far: far, fov: fov,
-    aspect: this.context.canvas.aspect
+    aspect: aspect
   }).init();
 }
 
@@ -96,8 +95,8 @@ GraphicsSystem.prototype.init_meshes = function() {
   asset_loader.convert_meshes(this.meshes);
 
   this.meshes.room = geometry_helper.make_hollow_cube([0, 0, 0], [10, 10, 10], [0, 0, 0]);
-  this.meshes.cueball = geometry_helper.make_sphere([0, 0, 0], 0.075, 50, 50, [0,0,0]);
-  this.meshes.ball = geometry_helper.make_sphere([0,0,0], 0.08, 50, 50, [0,0,0]);
+  this.meshes.cueball = geometry_helper.make_sphere([0, 0, 0], 0.022, 50, 50, [0,0,0]);
+  this.meshes.ball = geometry_helper.make_sphere([0,0,0], 0.024, 50, 50, [0,0,0]);
 }
 
 GraphicsSystem.prototype.init_models = function(meshes, materials) {
@@ -117,14 +116,21 @@ GraphicsSystem.prototype.init_models = function(meshes, materials) {
 
 GraphicsSystem.prototype.init_scene_graph = function(scene, lights, models) {
     nodes = {}
-    nodes.light = scene.add_node(scene.root, lights[0], "light_node", Node.NODE_TYPE.LIGHT);
-      nodes.room = scene.add_node(nodes.light, models.room, "room_node", Node.NODE_TYPE.MODEL);
-      // nodes.table = scene.add_node(nodes.light, null, "table_node", Node.NODE_TYPE.GROUP);
-      //   nodes.table_top = scene.add_node(nodes.table, models.table_top, "table_top_node", Node.NODE_TYPE.MODEL);
-      //   nodes.table_holes = scene.add_node(nodes.table, models.table_holes, "table_holes_node", Node.NODE_TYPE.MODEL);
-      //   nodes.table_wood = scene.add_node(nodes.table, models.table_wood, "table_wood_node", Node.NODE_TYPE.MODEL);
-      //nodes.ball_1 = scene.add_node(nodes.light, models.balls[0], "ball_1", Node.NODE_TYPE.MODEL);
-      nodes.ball_2 = scene.add_node(nodes.light, models.balls[1], "ball_2", Node.NODE_TYPE.MODEL);
+    nodes.light = scene.add_node(scene.root, lights[0], "light", Node.NODE_TYPE.LIGHT);
+      nodes.room = scene.add_node(nodes.light, models.room, "room", Node.NODE_TYPE.MODEL);
+      nodes.table = scene.add_node(nodes.light, null, "table", Node.NODE_TYPE.GROUP);
+        nodes.table_top = scene.add_node(nodes.table, models.table_top, "table_top", Node.NODE_TYPE.MODEL);
+        nodes.table_holes = scene.add_node(nodes.table, models.table_holes, "table_holes", Node.NODE_TYPE.MODEL);
+        nodes.table_wood = scene.add_node(nodes.table, models.table_wood, "table_wood", Node.NODE_TYPE.MODEL);
+
+      //playing balls
+      nodes.balls = [];
+      for (var i = 0; i < models.balls.length; i++) {
+        nodes.balls.push(scene.add_node(nodes.light, models.balls[i], "ball_" + i+1, Node.NODE_TYPE.MODEL));
+      }
+
+      // cueball
+      nodes.cueball = scene.add_node(nodes.light, models.cueball, "cueball", Node.NODE_TYPE.MODEL);
 
     return nodes;
   }
@@ -132,7 +138,7 @@ GraphicsSystem.prototype.init_scene_graph = function(scene, lights, models) {
 GraphicsSystem.prototype.init = function() {
   this.context.canvas = this.init_canvas();
   this.context.gl = this.init_gl_context(this.context.canvas);
-  this.context.camera = this.init_camera([0, 0, 4], [0, 0, 0], 1, 100, 0.5236);
+  this.context.camera = this.init_camera([0, 0, 4], [0, 0, 0], [0, 1, 0], 0.1, 100, 0.5236, this.context.canvas.aspect);
   this.context.scene = this.init_scene(this.context.gl, this.context.canvas, this.context.camera);
 
   this.init_lights();

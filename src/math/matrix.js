@@ -5,6 +5,7 @@
 // define a global matrix helper method to give access to object operations
 var vec3 = new Vector3();
 var mat4 = new Matrix4();
+var util = new Util();
 
 //--------------------------------------------------------------------------------------------------------//
 //  Vector3 : methods for creating and manipulating vectors in R^3
@@ -255,6 +256,15 @@ Matrix4.prototype.inverse = function(out, m)
     }
 }
 
+Matrix4.prototype.apply = function(out, pipeline) {
+  if(pipeline.length > 0) {
+    mat4.multiply(out, mat4.clone(out), pipeline.shift());
+    this.apply(out, pipeline)
+  }
+
+  return out;
+}
+
 //  matrix multiply
 Matrix4.prototype.multiply = function(out, a, b)
 {
@@ -444,4 +454,11 @@ Matrix4.prototype.to_string = function(inp)
          "|" + inp[1] + " " + inp[5] + " " + inp[9] + " " + inp[13] + "|\n" +
          "|" + inp[2] + " " + inp[6] + " " + inp[10] + " " + inp[14] + "|\n" +
          "|" + inp[3] + " " + inp[7] + " " + inp[11] + " " + inp[15] + "|\n"; 
+}
+
+function Util() {};
+
+Util.prototype.to_radians = function(angle)
+{
+  return angle * (Math.PI / 180);
 }
