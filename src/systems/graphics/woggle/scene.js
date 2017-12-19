@@ -7,6 +7,7 @@ function Node() {
   this.parent = null;
   this.children = [];
   this.node_object = null;
+  this.collider;
 
   // Create transform for node (= I)
   this.transform = mat4.create();
@@ -27,7 +28,7 @@ Node.NODE_TYPE = {
 Node.prototype.draw = function(scene, parent_transform) {
   var composite_transform = mat4.create();
   mat4.make_identity(composite_transform);
-  mat4.apply(composite_transform, [this.transform, parent_transform]);  
+  mat4.compose(composite_transform, [this.transform, parent_transform]);  
 
   vec3.to(this.position, [composite_transform[12], composite_transform[13], composite_transform[14]]);
 
@@ -57,14 +58,27 @@ Node.prototype.animate = function(delta_time) {
   });
 }
 
-Node.prototype.translate = function(translation) {
-  var translation_matrix = mat4.create();
-  mat4.make_translation(translation_matrix, translation);
+Node.prototype.translate = function(translation, model_space=false) {
+  if (!model_space) {
+    this.transform[12] += translation[0];
+    this.transform[13] += translation[1];
+    this.transform[14] += translation[2];
+  } else {
+    var translation_matrix = mat4.create();
+    mat4.make_translation(translation_matrix, translation);
+    mat4.compose(this.transform, [translation_matrix]);
+  }
 
-  mat4.apply(this.transform, [translation_matrix]);
+  if(this.has_collider()) {
+    this.collider.position = {x: this.transform[12], y: this.transform[14]};
+  }
 }
 
-Node.prototype.rotate = function(rotation) {
+Node.prototype.has_collider = function() {
+  return this.collider !== undefined;
+}
+
+Node.prototype.rotate = function(rotation, model_space=true) {
   var rotation_x = mat4.create();
   var rotation_y = mat4.create();
   var rotation_z = mat4.create();
@@ -73,21 +87,47 @@ Node.prototype.rotate = function(rotation) {
   mat4.make_rotation_y(rotation_y, rotation[1]);
   mat4.make_rotation_z(rotation_z, rotation[2]);
 
+  var position = [this.transform[12], this.transform[13], this.transform[14]];
+  
+  if (model_space) {
+    this.move_to_origin();
+  }
+
+  mat4.compose(this.transform, [rotation_z, rotation_y, rotation_x]);
+
+  if (model_space) {
+    this.move_to_position(position);
+  }
+}
+
+Node.prototype.scale = function(scale, model_space=true) {
+  mat4.make_scaling(this.scaling_transform, scale);
+
+  var position = [this.transform[12], this.transform[13], this.transform[14]];
+
+  if (model_space) {
+    this.move_to_origin();
+  }
+
+  mat4.compose(this.transform, [this.scaling_transform]);
+
+  if (model_space) {
+    this.move_to_position(position);
+  }
+}
+
+Node.prototype.move_to_origin = function() {
   this.transform[12] = 0;
   this.transform[13] = 0;
   this.transform[14] = 0;
-
-  mat4.apply(this.transform, [rotation_z, rotation_y, rotation_x]);
-
-  console.log(mat4.to_string(this.transform));
-  this.translate(this.position);
 }
 
-Node.prototype.scale = function(scale) {
-  mat4.make_scaling(this.scaling_transform, scale);
-
-  mat4.apply(this.transform, [this.scaling_transform]);
+Node.prototype.move_to_position = function(position) {
+  this.transform[12] = position[0];
+  this.transform[13] = position[1];
+  this.transform[14] = position[2];
 }
+
 //--------------------------------------------------------------------------------------------------------//
 //  Scene Graph
 //--------------------------------------------------------------------------------------------------------//
@@ -229,16 +269,6 @@ Scene.prototype.update_model = function() {
     this.gl.uniformMatrix4fv(this.index_matrix_model, false, this.matrix_model); 
 }
 
-// Scene.prototype.set_view_frustum = function(near, far, fov)
-// {
-//   mat4.make_projection(this.matrix_projection, near, far, fov, this.canvas.aspect); 
-// }
-
-// Scene.prototype.look_at = function(position, target, up)
-// {
-//   mat4.look_at(this.matrix_view, position, target, up);
-// }
-
 Scene.prototype.set_model = function(model)
 {
   mat4.to(this.matrix_model, model);
@@ -269,6 +299,7 @@ Scene.prototype.add_node = function(parent, node_object, node_name, node_type)
   node.name = node_name;
   node.type = node_type;
   node.node_object = node_object;
+  node.parent = parent;
 
   parent.children[parent.children.length] = node;
 

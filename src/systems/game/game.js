@@ -1,6 +1,6 @@
 function GameSystem() {
   this.context;
-  this.game_objects = [];
+  this.game_objects = {};
 
   this.sensitivity = 1.0;
   this.delta = 0.1;
@@ -33,13 +33,22 @@ GameSystem.prototype.update = function() {
   return true;
 }
 
+GameSystem.prototype.reset_table = function() {
+  var table = this.context.nodes.table;
+  var rotation_x = mat4.create()
+  var translation = mat4.create()
+
+  table.translate([0, -4.325, 0]);
+  table.rotate([-Math.PI/2, 0, 0]);
+}
+
 GameSystem.prototype.reset_balls = function() {
   var cueball = this.context.nodes.cueball;
   var balls = this.context.nodes.balls;
 
   var table_level = -4.25;
+
   for (var ball in balls) {
-    balls[ball].rotate([0.05, 0, 0]);
     balls[ball].translate([0, table_level, 0]);
   }
   cueball.translate([1, table_level, 0]);
@@ -63,16 +72,6 @@ GameSystem.prototype.reset_balls = function() {
   balls[14].translate([0, 0, -ball_diameter]);
 }
 
-GameSystem.prototype.reset_table = function() {
-  var table = this.context.nodes.table;
-  var rotation_x = mat4.create()
-  var translation = mat4.create()
-
-  mat4.make_rotation_x(rotation_x, -Math.PI/2);
-  mat4.make_translation(translation, [0, -4.325, 0]);
-  mat4.apply(table.transform, [translation, rotation_x]);
-}
-
 GameSystem.prototype.reset_camera = function() {
   var camera = this.context.camera;
   var nodes = this.context.nodes;
@@ -83,10 +82,9 @@ GameSystem.prototype.reset_camera = function() {
 }
 
 GameSystem.prototype.restart = function() {
-  // for (var ball in this.context.nodes.balls) {
-  //   mat4.make_translation(translation)
-  //   ball.translate()
-  // }
+  reset_table();
+  reset_balls();
+  reset_camera();
 }
 
 //--------------------------------------------------------------------------------------------------------//

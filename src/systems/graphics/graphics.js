@@ -9,28 +9,32 @@ function GraphicsSystem() {
   this.element_id;
 };
 
-GraphicsSystem.prototype.init_canvas = function() {
+GraphicsSystem.prototype.init_canvas = function(element_id, width, height) {
   var canvas = document.getElementById(this.element_id);
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  width === undefined
+    ? canvas.width = window.innerWidth
+    : canvas.width = width;
+
+  height === undefined
+    ? canvas.height = window.innerHeight
+    : canvas.height = height;
+
   canvas.aspect = canvas.width / canvas.height;
 
-  return canvas;
+  this.context.canvas = canvas;
 }
 
 GraphicsSystem.prototype.init_gl_context = function(canvas) {
   try {
-    this.gl = canvas.getContext("experimental-webgl", {antialias: true}); 
+    this.context.gl = canvas.getContext("experimental-webgl", {antialias: true}); 
   } catch (e) {
     alert("No webGL compatability detected!"); 
     return false;
   }
-
-  return this.gl;
 }
 
 GraphicsSystem.prototype.init_camera = function(position, target, up, near, far, fov, aspect) {
-  return factory.create(Camera, {
+  this.context.camera = factory.create(Camera, {
     position: position, target: target, up: up,
     near: near, far: far, fov: fov,
     aspect: aspect
@@ -38,7 +42,7 @@ GraphicsSystem.prototype.init_camera = function(position, target, up, near, far,
 }
 
 GraphicsSystem.prototype.init_scene = function(gl, canvas, camera) {
-  return factory.create_scene(gl, canvas, camera);
+  this.context.scene = factory.create_scene(gl, canvas, camera);
 }
 
 GraphicsSystem.prototype.init_lights = function() {
@@ -74,7 +78,6 @@ GraphicsSystem.prototype.init_materials = function() {
   }, texture_list.wood);
 
   this.materials.balls = [];
-  // Create containers for ball materials
   for (i = 0; i < 15; i++) {
     this.materials.balls.push(
       factory.create_material({
@@ -126,27 +129,25 @@ GraphicsSystem.prototype.init_scene_graph = function(scene, lights, models) {
       //playing balls
       nodes.balls = [];
       for (var i = 0; i < models.balls.length; i++) {
-        nodes.balls.push(scene.add_node(nodes.light, models.balls[i], "ball_" + i+1, Node.NODE_TYPE.MODEL));
+        nodes.balls.push(scene.add_node(nodes.light, models.balls[i], "ball_" + (i+1), Node.NODE_TYPE.MODEL));
       }
 
       // cueball
       nodes.cueball = scene.add_node(nodes.light, models.cueball, "cueball", Node.NODE_TYPE.MODEL);
 
-    return nodes;
+    this.context.nodes = nodes;
   }
 
 GraphicsSystem.prototype.init = function() {
-  this.context.canvas = this.init_canvas();
-  this.context.gl = this.init_gl_context(this.context.canvas);
-  this.context.camera = this.init_camera([0, 0, 4], [0, 0, 0], [0, 1, 0], 0.1, 100, 0.5236, this.context.canvas.aspect);
-  this.context.scene = this.init_scene(this.context.gl, this.context.canvas, this.context.camera);
-
+  this.init_canvas(this.element_id);
+  this.init_gl_context(this.context.canvas);
+  this.init_camera([0, 0, 4], [0, 0, 0], [0, 1, 0], 0.1, 100, 0.5236, this.context.canvas.aspect);
+  this.init_scene(this.context.gl, this.context.canvas, this.context.camera);
   this.init_lights();
   this.init_materials();
   this.init_meshes();
   this.init_models(this.meshes, this.materials);
-
-  this.context.nodes = this.init_scene_graph(this.context.scene, this.lights, this.models);
+  this.init_scene_graph(this.context.scene, this.lights, this.models);
 
   return this;
 }

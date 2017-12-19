@@ -256,12 +256,12 @@ Matrix4.prototype.inverse = function(out, m)
     }
 }
 
-Matrix4.prototype.apply = function(out, pipeline) {
+Matrix4.prototype.compose = function(out, pipeline) {
   if(pipeline.length > 0) {
     mat4.multiply(out, mat4.clone(out), pipeline.shift());
-    this.apply(out, pipeline)
+    this.compose(out, pipeline)
   }
-
+  
   return out;
 }
 

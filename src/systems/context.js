@@ -11,4 +11,5 @@ EngineContext.prototype.add_system = function(name, System, attr) {
   this.systems[name] = factory.create(System, attr);
   this.systems[name].context = this;
   this.systems[name].init();
+  return this;
 };

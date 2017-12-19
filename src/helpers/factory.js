@@ -1,37 +1,45 @@
 factory = new Factory();
 function Factory () { 
-    this.scene = null;
+  this.scene = null;
 };
 
 Factory.prototype.create = function(Obj, attr) {
-    obj = new Obj();
-    for (var v in attr) {
-        obj[v] = attr[v];
-    }
+  obj = new Obj();
+  for (var v in attr) {
+    obj[v] = attr[v];
+  }
 
-    return obj;
+  return obj;
+}
+
+Factory.prototype.create_engine = function(element_id) {
+  return this.create(EngineContext)
+             .add_system("graphics", GraphicsSystem, {element_id: element_id})
+             .add_system("physics", PhysicsSystem)
+             .add_system("input", InputSystem)
+             .add_system("game", GameSystem);
 }
 
 Factory.prototype.create_scene = function(gl, canvas, camera) {
-    this.scene = this.create(Scene).init(gl, canvas, camera);
-    return this.scene;
+  this.scene = this.create(Scene).init(gl, canvas, camera);
+  return this.scene;
 }
 
 Factory.prototype.create_light = function(light_struct) {
-    return this.create(Light, light_struct)
-                  .bind(this.scene.gl, this.scene.shader_program, 0);
+  return this.create(Light, light_struct)
+             .bind(this.scene.gl, this.scene.shader_program, 0);
 }
 
 Factory.prototype.create_material = function(material_struct, texture) {
-    return this.create(Material, material_struct)
-                  .set_albedo(this.scene.gl, texture)
-                  .bind(this.scene.gl, this.scene.shader_program);
+  return this.create(Material, material_struct)
+             .set_albedo(this.scene.gl, texture)
+             .bind(this.scene.gl, this.scene.shader_program);
 }
 
 Factory.prototype.create_model = function(name, mesh, material) {
-    return this.create(Model, {
-        name: name,
-        index: mesh.index, vertex: mesh.vertex,
-        material: material
-    }).compile(this.scene);
+  return this.create(Model, {
+      name: name,
+      index: mesh.index, vertex: mesh.vertex,
+      material: material
+  }).compile(this.scene);
 }
